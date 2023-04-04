@@ -11,7 +11,6 @@ public class Main {
             throw new RuntimeException(e);
         }
 
-
         JFrame frame = new JFrame("Cleaner & UT-Planer");
         frame.setContentPane(new MainWindow().mainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -19,6 +18,5 @@ public class Main {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-
     }
 }

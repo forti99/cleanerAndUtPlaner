@@ -21,12 +21,6 @@ public class Runtime implements Comparable<Runtime> {
         return new Runtime(hours, minutes, seconds);
     }
 
-    public void addRuntime(Runtime runtimeToAdd) {
-        addHours(runtimeToAdd.getHours());
-        addMinutes(runtimeToAdd.getMinutes());
-        addSeconds(runtimeToAdd.getSeconds());
-    }
-
     public void addSeconds(int seconds) {
         addMinutes((this.seconds + seconds) / 60);
         this.seconds = (this.seconds + seconds) % 60;
@@ -45,29 +39,7 @@ public class Runtime implements Comparable<Runtime> {
      * @return returns a all positive runtime of this runtime (all negative values converted to positive)
      */
     public Runtime getPositiveRuntime() {
-        int hours;
-        int minutes;
-        int seconds;
-
-        if (this.hours < 0) {
-            hours = this.hours * (-1);
-        } else {
-            hours = this.hours;
-        }
-
-        if (this.minutes < 0) {
-            minutes = this.minutes * (-1);
-        } else {
-            minutes = this.minutes;
-        }
-
-        if (this.seconds < 0) {
-            seconds = this.seconds * (-1);
-        } else {
-            seconds = this.seconds;
-        }
-
-        return new Runtime(hours, minutes, seconds);
+        return new Runtime(Math.abs(this.hours), Math.abs(this.minutes), Math.abs(this.seconds));
     }
 
     public int toSeconds() {
@@ -111,15 +83,7 @@ public class Runtime implements Comparable<Runtime> {
                     if (this.minutes > otherRuntime.getMinutes()) {
                         return 1;
                     } else {
-                        if (this.toSeconds() < otherRuntime.getSeconds()) {
-                            return -1;
-                        } else {
-                            if (this.seconds > otherRuntime.getSeconds()) {
-                                return 1;
-                            } else {
-                                return 0;
-                            }
-                        }
+                        return Integer.compare(this.seconds, otherRuntime.getSeconds());
                     }
                 }
             }

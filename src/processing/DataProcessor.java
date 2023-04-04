@@ -66,7 +66,7 @@ public class DataProcessor {
             for (int i = 0; i < 10; i++) {
                 units[i] = Integer.parseInt(fields[i + 2]);
             }
-            Village village = new Village(ownerName, x, y, units);
+            Village village = new Village(ownerName, x, y, units, 0);
             villages.add(village);
         }
         return villages;

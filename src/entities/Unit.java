@@ -52,7 +52,6 @@ public enum Unit {
         };
     }
 
-
     public String getName() {
         return name;
     }

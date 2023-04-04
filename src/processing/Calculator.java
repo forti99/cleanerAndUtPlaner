@@ -12,33 +12,55 @@ import java.util.ArrayList;
 
 public class Calculator {
 
-    public ArrayList<Command> calculateFilteredCleanerOrUT(boolean isCleaner, ArrayList<Command> allCommandsToCleanOrUT, ArrayList<Village> startingVillages, ArrayList<String> ownerNames, int[] minimumUnits) {
+    public ArrayList<Command> calculateFilteredCleanerOrUT(ArrayList<Command> allCommandsToCleanOrUT, ArrayList<Village> startingVillages, ArrayList<String> ownerNames, int[] minimumUnits) {
 
         Runtime maxRuntime = Settings.RUNTIME_STEP_INCREASE;
         ArrayList<Village> allOwnersVillages = DataProcessor.filterVillagesForOwnersAndUnits(startingVillages, ownerNames, minimumUnits);
         ArrayList<Command> allCleanerOrUTList = new ArrayList<>();
+        int neededCleanerAmount = allCommandsToCleanOrUT.size();
 
-        while (allCleanerOrUTList.size() < allCommandsToCleanOrUT.size()) {
-            allCleanerOrUTList = new ArrayList<>();
+        while (allCleanerOrUTList.size() < neededCleanerAmount) {
+            ArrayList<Command> commandsWithFoundCleaners = new ArrayList<>();
             for (Command commandToCleanOrUT : allCommandsToCleanOrUT) {
                 ArrayList<Command> cleanerOrUTList = new ArrayList<>();
                 for (Village startVillage : allOwnersVillages) {
-                    cleanerOrUTList.addAll(calculateSingleCleanerOrUT(isCleaner, commandToCleanOrUT, startVillage, minimumUnits, maxRuntime, startVillage.getOwnerName()));
+                    cleanerOrUTList.addAll(calculateSingleCleanerOrUT(commandToCleanOrUT, startVillage, minimumUnits, maxRuntime, startVillage.getOwnerName()));
                 }
                 if (cleanerOrUTList.size() > 0) {
-                    allCleanerOrUTList.add(findClosestCommand(commandToCleanOrUT, cleanerOrUTList));
+                    Village startVillageWithMaxCleaner = null;
+                    Command closestCommand = findClosestCommand(commandToCleanOrUT, cleanerOrUTList);
+                    for (Village startVillage : allOwnersVillages) {
+                        if (startVillage.getLocation().equals(closestCommand.origin())) {
+                            startVillage.setCleanerToSendAmount(startVillage.getCleanerToSendAmount() + 1);
+                            if (startVillage.getCleanerToSendAmount() >= Settings.MAX_CLEANER_TO_SEND_FROM_VILLAGE) {
+                                startVillageWithMaxCleaner = startVillage;
+                            }
+                            break;
+                        }
+                    }
+                    allOwnersVillages.remove(startVillageWithMaxCleaner);
+                    allCleanerOrUTList.add(closestCommand);
+                    commandsWithFoundCleaners.add(commandToCleanOrUT);
                 }
-
+            }
+            for (Command commandWithFoundCleaner : commandsWithFoundCleaners) {
+                allCommandsToCleanOrUT.remove(commandWithFoundCleaner);
             }
             maxRuntime.addMinutes(1);
+            if (maxRuntime.compareTo(Settings.MAX_RUNTIME_DIFFERENCE) > 0) {
+                break;
+            }
         }
-
         return allCleanerOrUTList;
     }
 
-    private ArrayList<Command> calculateSingleCleanerOrUT(boolean isCleaner, Command command, Village startVillage, int[] minimumUnits, Runtime maxRuntimeDifference, String senderName) {
-        Point2D origin = startVillage.getLocation();
-        Point2D target = command.target();
+    private ArrayList<Command> calculateSingleCleanerOrUT(Command command, Village startVillage, int[] minimumUnits, Runtime maxRuntimeDifference, String senderName) {
+        ArrayList<Command> cleanerOrUTList = new ArrayList<>();
+
+        if (startVillage.getCleanerToSendAmount() >= Settings.MAX_CLEANER_TO_SEND_FROM_VILLAGE) {
+            return cleanerOrUTList;
+        }
+
         Runtime commandRuntime;
 
         if (command.isRunning()) {
@@ -47,9 +69,8 @@ public class Calculator {
             commandRuntime = command.getRuntime();
         }
 
-        double distance = calculateDistance(target, origin);
+        double distance = calculateDistance(command.target(), startVillage.getLocation());
 
-        ArrayList<Command> cleanerOrUTList = new ArrayList<>();
         int[] villageUnits = startVillage.getUnits();
         int j = 0;
         for (int i : villageUnits) {
@@ -57,19 +78,11 @@ public class Calculator {
                 //converts a number to a unit for distance-calculating
                 Unit unit = Unit.intToUnit(j);
                 Runtime runtime = calculateRuntime(distance, unit);
-                if (isCleaner) {
-                    if (runtime.compareTo(commandRuntime) >= 0) {
-                        Runtime differenceToOtherCommand = runtime.difference(commandRuntime);
-                        if (differenceToOtherCommand.getPositiveRuntime().compareTo(maxRuntimeDifference) <= 0) {
-                            cleanerOrUTList.add(new Command(target, origin, command.arrival(), unit, senderName));
-                        }
-                    }
-                } else {
-                    if (runtime.compareTo(commandRuntime) <= 0) {
-                        Runtime differenceToOtherCommand = runtime.difference(commandRuntime);
-                        if (differenceToOtherCommand.getPositiveRuntime().compareTo(maxRuntimeDifference) <= 0) {
-                            cleanerOrUTList.add(new Command(target, origin, command.arrival(), unit, senderName));
-                        }
+
+                if (runtime.compareTo(commandRuntime) >= 0) {
+                    Runtime differenceToOtherCommand = runtime.difference(commandRuntime);
+                    if (differenceToOtherCommand.getPositiveRuntime().compareTo(maxRuntimeDifference) <= 0) {
+                        cleanerOrUTList.add(new Command(command.target(), startVillage.getLocation(), command.arrival(), unit, senderName));
                     }
                 }
             }
@@ -89,13 +102,12 @@ public class Calculator {
                 closestCommand = command;
             }
         }
-
         return closestCommand;
     }
 
     public static Runtime calculateCommandRuntime(Command command) {
         double distance = calculateDistance(command.target(), command.origin());
-        return Runtime.secondsToRuntime((int) Math.round(distance * (command.unit().getSpeed() / (Settings.WORLDSPEED * Settings.UNIT_MODIFICATOR))));
+        return calculateRuntime(distance, command.unit());
     }
 
     public static Runtime calculateRuntime(double distance, Unit unit) {
