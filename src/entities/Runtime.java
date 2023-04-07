@@ -89,13 +89,4 @@ public class Runtime implements Comparable<Runtime> {
             }
         }
     }
-
-    @Override
-    public String toString() {
-        return "Runtime{" +
-                "hours=" + hours +
-                ", minutes=" + minutes +
-                ", seconds=" + seconds +
-                '}';
-    }
 }

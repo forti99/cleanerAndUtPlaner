@@ -4,7 +4,7 @@ import entities.Command;
 import entities.Village;
 import processing.Calculator;
 import processing.DataProcessor;
-import processing.Settings;
+import util.Settings;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,6 +32,9 @@ public class MainWindow {
     private JButton cleanerUTCalculateButton;
     private JTextArea inputPlayerNames;
     private JTextField maxCleanerFromVillageField;
+    private JRadioButton UTBerechnenRadioButton;
+    private JRadioButton cleanerBerechnenRadioButton;
+    private JTextField maxCleanerTargetVillageField;
 
     public MainWindow() {
         cleanerUTCalculateButton.addActionListener(new CalculateButtonPressed());
@@ -43,26 +46,33 @@ public class MainWindow {
         public void actionPerformed(ActionEvent e) {
             final long timeStart = System.currentTimeMillis();
             ArrayList<Command> commands;
+
             try {
                 commands = DataProcessor.readUltimateCommandsFromTextArea(importNobleTextArea);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
+
             ArrayList<Village> startVillages = DataProcessor.readVillagesFromTextArea(importTroopsTextArea);
             ArrayList<String> senderNames = DataProcessor.readLinesFromTextArea(inputPlayerNames);
             int[] minimumUnits = readMinimumUnits();
             Calculator calculator = new Calculator();
             int maxCleanerFromVillage = getIntFromTextField(maxCleanerFromVillageField);
+            int maxCleanerTargetVillage = getIntFromTextField(maxCleanerTargetVillageField);
+            boolean isCleaner = cleanerBerechnenRadioButton.isSelected();
+
             if (maxCleanerFromVillage != 0) {
                 Settings.MAX_CLEANER_TO_SEND_FROM_VILLAGE = maxCleanerFromVillage;
-            } else {
-                Settings.MAX_CLEANER_TO_SEND_FROM_VILLAGE = 1;
             }
 
-            ArrayList<Command> allSenderCommands = calculator.calculateFilteredCleanerOrUT(commands, startVillages, senderNames, minimumUnits);
+            if (maxCleanerTargetVillage != 0) {
+                Settings.MAX_CLEANER_TO_SEND_TO_TARGET_VILLAGE = maxCleanerTargetVillage;
+            }
+
+            ArrayList<Command> allSenderCommands = calculator.calculateFilteredCleanerOrUT(isCleaner, commands, startVillages, senderNames, minimumUnits);
             ArrayList<ArrayList<Command>> commandsSplitedBySender = DataProcessor.splitCommandsForOwners(allSenderCommands, senderNames);
             try {
-                displayUltimateCommandOutput(commandsSplitedBySender);
+                displayUltimateCommandOutput(isCleaner, commandsSplitedBySender);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -71,7 +81,7 @@ public class MainWindow {
         }
     }
 
-    private void displayUltimateCommandOutput(ArrayList<ArrayList<Command>> allOwnersUltimateCommands) throws IOException {
+    private void displayUltimateCommandOutput(boolean isCleaner, ArrayList<ArrayList<Command>> allOwnersUltimateCommands) throws IOException {
         JFrame outputFrame = new JFrame("Ausgabe Zwischencleaner");
         outputFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -92,8 +102,8 @@ public class MainWindow {
                 if (ownerCommands.size() != 0) {
                     JTextArea playerTextArea = addTab(tabbedPane, ownerNames.get(i) + " (" + ownerCommands.size() + ")");
                     for (Command command : ownerCommands) {
-                        allCommandsTextArea.append(command.toUltimateString() + "\n");
-                        playerTextArea.append(command.toUltimateString() + "\n");
+                        allCommandsTextArea.append(command.toUltimateString(isCleaner) + "\n");
+                        playerTextArea.append(command.toUltimateString(isCleaner) + "\n");
                         amountAllCommands++;
                     }
                 }

@@ -40,7 +40,7 @@ public class DataProcessor {
         for (String ownerName : ownerNames) {
             singleOwnerCommands = new ArrayList<>();
             for (Command command : mixedOwnerCommands) {
-                if (ownerName.equals(command.senderName())) {
+                if (ownerName.equals(command.getSenderName())) {
                     singleOwnerCommands.add(command);
                 }
             }
