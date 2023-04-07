@@ -6,13 +6,13 @@ public class Village {
     private final String ownerName;
     private final Point2D location;
     private int[] units;
-    private int cleanerToSendAmount;
+    private int cleanerOrUtToSendAmount;
 
-    public Village(String ownerName, double x, double y, int[] units, int cleanerToSendAmount) {
+    public Village(String ownerName, double x, double y, int[] units, int cleanerOrUtToSendAmount) {
         this.ownerName = ownerName;
         this.location = new Point2D.Double(x, y);
         this.units = units;
-        this.cleanerToSendAmount = cleanerToSendAmount;
+        this.cleanerOrUtToSendAmount = cleanerOrUtToSendAmount;
     }
 
     //Getter + Setter
@@ -28,11 +28,11 @@ public class Village {
         return units;
     }
 
-    public int getCleanerToSendAmount() {
-        return cleanerToSendAmount;
+    public int getCleanerOrUtToSendAmount() {
+        return cleanerOrUtToSendAmount;
     }
 
-    public void setCleanerToSendAmount(int cleanerToSendAmount) {
-        this.cleanerToSendAmount = cleanerToSendAmount;
+    public void setCleanerOrUtToSendAmount(int cleanerToSendAmount) {
+        this.cleanerOrUtToSendAmount = cleanerToSendAmount;
     }
 }
