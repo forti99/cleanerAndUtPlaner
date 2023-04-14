@@ -14,6 +14,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Set;
 
 public class MainWindow {
     public JPanel mainPanel;
@@ -34,7 +35,6 @@ public class MainWindow {
     private JTextField maxCleanerFromVillageField;
     private JRadioButton UTBerechnenRadioButton;
     private JRadioButton cleanerBerechnenRadioButton;
-    private JTextField maxCleanerTargetVillageField;
 
     public MainWindow() {
         cleanerUTCalculateButton.addActionListener(new CalculateButtonPressed());
@@ -44,8 +44,7 @@ public class MainWindow {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            final long timeStart = System.currentTimeMillis();
-            ArrayList<Command> commands;
+            Set<Command> commands;
 
             try {
                 commands = DataProcessor.readUltimateCommandsFromTextArea(importNobleTextArea);
@@ -53,41 +52,34 @@ public class MainWindow {
                 throw new RuntimeException(ex);
             }
 
-            ArrayList<Village> startVillages = DataProcessor.readVillagesFromTextArea(importTroopsTextArea);
-            ArrayList<String> senderNames = DataProcessor.readLinesFromTextArea(inputPlayerNames);
+            Set<Village> startVillages = DataProcessor.readVillagesFromTextArea(importTroopsTextArea);
+            Set<String> senderNames = DataProcessor.readLinesFromTextArea(inputPlayerNames);
+
             int[] minimumUnits = readMinimumUnits();
-            Calculator calculator = new Calculator();
             int maxCleanerFromVillage = getIntFromTextField(maxCleanerFromVillageField);
-            int maxCleanerTargetVillage = getIntFromTextField(maxCleanerTargetVillageField);
             boolean isCleaner = cleanerBerechnenRadioButton.isSelected();
 
             if (maxCleanerFromVillage != 0) {
-                Settings.MAX_CLEANER_TO_SEND_FROM_VILLAGE = maxCleanerFromVillage;
+                Settings.MAX_CLEANER_OR_UT_TO_SEND_FROM_VILLAGE = maxCleanerFromVillage;
             }
 
-            if (maxCleanerTargetVillage != 0) {
-                Settings.MAX_CLEANER_TO_SEND_TO_TARGET_VILLAGE = maxCleanerTargetVillage;
-            }
-
-            ArrayList<Command> allSenderCommands = calculator.calculateFilteredCleanerOrUT(isCleaner, commands, startVillages, senderNames, minimumUnits);
-            ArrayList<ArrayList<Command>> commandsSplitedBySender = DataProcessor.splitCommandsForOwners(allSenderCommands, senderNames);
+            Set<Command> allSenderCommands = Calculator.calculateCleanerOrUt(isCleaner, commands, startVillages, senderNames, minimumUnits);
+            Set<Set<Command>> commandsSplitedBySender = DataProcessor.splitCommandsForOwners(allSenderCommands, senderNames);
             try {
                 displayUltimateCommandOutput(isCleaner, commandsSplitedBySender);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-            final long timeEnd = System.currentTimeMillis();
-            System.out.println("Runtime: " + (timeEnd - timeStart) + " Millisek.");
         }
     }
 
-    private void displayUltimateCommandOutput(boolean isCleaner, ArrayList<ArrayList<Command>> allOwnersUltimateCommands) throws IOException {
+    private void displayUltimateCommandOutput(boolean isCleaner, Set<Set<Command>> allOwnersUltimateCommands) throws IOException {
         JFrame outputFrame = new JFrame("Ausgabe Zwischencleaner");
         outputFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         JTabbedPane tabbedPane = new JTabbedPane();
 
         int amountAllCommands = 0;
-        for (ArrayList<Command> ownerCommands : allOwnersUltimateCommands) {
+        for (Set<Command> ownerCommands : allOwnersUltimateCommands) {
             amountAllCommands += ownerCommands.size();
         }
         JTextArea allCommandsTextArea = addTab(tabbedPane, "Alle Befehle" + " (" + amountAllCommands + ")");
@@ -96,9 +88,9 @@ public class MainWindow {
         if (allOwnersUltimateCommands.size() == 0) {
             allCommandsTextArea.append("Keine Cleaner berechnet!");
         } else {
-            ArrayList<String> ownerNames = DataProcessor.readLinesFromTextArea(inputPlayerNames);
+            ArrayList<String> ownerNames = DataProcessor.readOwnerNamesFromTextArea(inputPlayerNames);
             int i = 0;
-            for (ArrayList<Command> ownerCommands : allOwnersUltimateCommands) {
+            for (Set<Command> ownerCommands : allOwnersUltimateCommands) {
                 if (ownerCommands.size() != 0) {
                     JTextArea playerTextArea = addTab(tabbedPane, ownerNames.get(i) + " (" + ownerCommands.size() + ")");
                     for (Command command : ownerCommands) {

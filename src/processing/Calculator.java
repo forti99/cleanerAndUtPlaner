@@ -4,130 +4,114 @@ import entities.Command;
 import entities.Runtime;
 import entities.Unit;
 import entities.Village;
-import util.CommandComparator;
+import util.CommandDifferenceComparator;
 import util.Settings;
 
-import java.awt.geom.Point2D;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.*;
+import java.util.*;
 
 public class Calculator {
+    private Calculator() {
+    }
 
-    public ArrayList<Command> calculateFilteredCleanerOrUT(boolean isCleaner, ArrayList<Command> allCommandsToCleanOrUT, ArrayList<Village> startingVillages, ArrayList<String> ownerNames, int[] minimumUnits) {
+    public static Set<Command> calculateCleanerOrUt(boolean isCleaner, Set<Command> commandsToClean, Set<Village> startVillages, Set<String> ownerNames, int[] minimumUnits) {
+        Set<Village> startVillagesFiltered = filterVillagesForUnits(filterVillagesForOwners(startVillages, ownerNames), minimumUnits);
+        Map<Command, ArrayList<Command>> allPotentialCleaner = calculateAllPotentialCleanerOrUtSorted(isCleaner, commandsToClean, startVillagesFiltered, minimumUnits);
+        Set<Command> bestCleanerOrUtSet = new HashSet<>();
 
-        Runtime maxRuntime = Settings.MAX_RUNTIME_START;
-        ArrayList<Village> allOwnersVillages = DataProcessor.filterVillagesForOwnersAndUnits(startingVillages, ownerNames, minimumUnits);
-        ArrayList<Command> allCleanerOrUTList = new ArrayList<>();
-        int neededCleanerAmount = allCommandsToCleanOrUT.size() * Settings.MAX_CLEANER_TO_SEND_TO_TARGET_VILLAGE;
+        Map<Point, Village> locationToFilteredVillage = new HashMap<>();
+        for (Village village : startVillagesFiltered) {
+            locationToFilteredVillage.put(village.getLocation(), village);
+        }
 
-        while (allCleanerOrUTList.size() < neededCleanerAmount) {
-            ArrayList<Command> commandsWithFoundCleaners = new ArrayList<>();
-            for (Command commandToCleanOrUT : allCommandsToCleanOrUT) {
-                ArrayList<Command> cleanerOrUTList = new ArrayList<>();
-                for (Village startVillage : allOwnersVillages) {
-                    cleanerOrUTList.addAll(calculateSingleCleanerOrUT(isCleaner, commandToCleanOrUT, startVillage, minimumUnits, maxRuntime, startVillage.getOwnerName()));
+        for (Command commandToClean : allPotentialCleaner.keySet()) {
+            ArrayList<Command> potentialCleaner = allPotentialCleaner.get(commandToClean);
+            if (potentialCleaner.size() > 0) {
+                int i = 0;
+                Village bestCleanerOrigin = locationToFilteredVillage.get(potentialCleaner.get(i).getOrigin());
+                //takes the best cleaner whose origin village has not yet reached the maximum of allowed cleanerOrUtToSend
+                while (bestCleanerOrigin.getCleanerOrUtToSendAmount() >= Settings.MAX_CLEANER_OR_UT_TO_SEND_FROM_VILLAGE && i < potentialCleaner.size() - 1) {
+                    i++;
+                    bestCleanerOrigin = locationToFilteredVillage.get(potentialCleaner.get(i).getOrigin());
                 }
-                if (cleanerOrUTList.size() > 0) {
-                    Village startVillageWithMaxCleaner = null;
-                    List<Command> closestCommands = findClosestCommands(isCleaner, commandToCleanOrUT, cleanerOrUTList);
-                    for (Village startVillage : allOwnersVillages) {
-                        for (Command closestCommand : closestCommands) {
-                            if (startVillage.getLocation().equals(closestCommand.getOrigin())) {
-                                startVillage.setCleanerOrUtToSendAmount(startVillage.getCleanerOrUtToSendAmount() + 1);
-                                if (startVillage.getCleanerOrUtToSendAmount() >= Settings.MAX_CLEANER_TO_SEND_FROM_VILLAGE) {
-                                    startVillageWithMaxCleaner = startVillage;
-                                }
-                                break;
+                bestCleanerOrUtSet.add(potentialCleaner.get(i));
+                bestCleanerOrigin.addCleanerOrUtToSendAmount(1);
+            }
+        }
+        return bestCleanerOrUtSet;
+    }
+
+
+    public static Map<Command, ArrayList<Command>> calculateAllPotentialCleanerOrUtSorted(boolean isCleaner, Set<Command> commandsToClean, Set<Village> startVillagesFiltered, int[] minimumUnits) {
+        Map<Command, ArrayList<Command>> potentialCleanerPerCommands = new HashMap<>();
+
+        Runtime commandRuntime;
+        for (Command commandToClean : commandsToClean) {
+            commandRuntime = commandToClean.getRuntime();
+            ArrayList<Command> potentialCleaners = new ArrayList<>();
+            for (Village startVillage : startVillagesFiltered) {
+                double distance = commandToClean.getTarget().distance(startVillage.getLocation());
+
+                int[] villageUnits = startVillage.getUnits();
+
+                int j = 0;
+                for (int i : villageUnits) {
+                    if (i >= minimumUnits[j] && minimumUnits[j] > 0) {
+                        //converts a number to a unit for distance-calculating
+                        Unit unit = Unit.intToUnit(j);
+                        if (isCleaner) {
+                            if (calculateRuntime(distance, unit).compareTo(commandRuntime) >= 0) {
+                                Command potentialCleanerCommand = new Command(commandToClean.getTarget(), startVillage.getLocation(), commandToClean.getArrival(), unit, startVillage.getOwnerName());
+                                potentialCleaners.add(potentialCleanerCommand);
+                            }
+                        } else {
+                            if (calculateRuntime(distance, unit).compareTo(commandRuntime) <= 0) {
+                                Command potentialCleanerCommand = new Command(commandToClean.getTarget(), startVillage.getLocation(), commandToClean.getArrival(), unit, startVillage.getOwnerName());
+                                potentialCleaners.add(potentialCleanerCommand);
                             }
                         }
                     }
-                    allOwnersVillages.remove(startVillageWithMaxCleaner);
-                    allCleanerOrUTList.addAll(closestCommands);
-                    commandsWithFoundCleaners.add(commandToCleanOrUT);
+                    j++;
                 }
             }
-            for (Command commandWithFoundCleaner : commandsWithFoundCleaners) {
-                allCommandsToCleanOrUT.remove(commandWithFoundCleaner);
-            }
-            maxRuntime.addSeconds(Settings.RUNTIME_STEP_INCREASE_IN_SECONDS);
-            if (maxRuntime.compareTo(Settings.MAX_RUNTIME_DIFFERENCE) > 0) {
-                break;
-            }
+            //Sorts the potential cleaners according to their runtime (and consequentially according to there runtime difference with the command to clean)
+            potentialCleaners.sort(new CommandDifferenceComparator(commandToClean));
+            potentialCleanerPerCommands.put(commandToClean, potentialCleaners);
         }
-        return allCleanerOrUTList;
+
+        return potentialCleanerPerCommands;
     }
 
-    private ArrayList<Command> calculateSingleCleanerOrUT(boolean isCleaner, Command command, Village startVillage, int[] minimumUnits, Runtime maxRuntimeDifference, String senderName) {
-        ArrayList<Command> cleanerOrUTList = new ArrayList<>();
+    private static Set<Village> filterVillagesForOwners(Set<Village> villages, Set<String> ownerNames) {
+        Set<Village> filteredVillages = new HashSet<>();
 
-        if (startVillage.getCleanerOrUtToSendAmount() >= Settings.MAX_CLEANER_TO_SEND_FROM_VILLAGE) {
-            return cleanerOrUTList;
+        for (Village village : villages) {
+            if (ownerNames.contains(village.getOwnerName())) {
+                filteredVillages.add(village);
+            }
         }
+        return filteredVillages;
+    }
 
-        Runtime commandRuntime;
+    private static Set<Village> filterVillagesForUnits(Set<Village> villages, int[] minimumUnits) {
+        Set<Village> filteredVillages = new HashSet<>();
 
-        if (command.isRunning()) {
-            commandRuntime = getTimeToArrival(command.getArrival());
-        } else {
-            commandRuntime = command.getRuntime();
-        }
-
-        double distance = calculateDistance(command.getTarget(), startVillage.getLocation());
-
-        int[] villageUnits = startVillage.getUnits();
-
-        int j = 0;
-        for (int i : villageUnits) {
-            if (i >= minimumUnits[j] && minimumUnits[j] > 0) {
-                //converts a number to a unit for distance-calculating
-                Unit unit = Unit.intToUnit(j);
-                Runtime runtime = calculateRuntime(distance, unit);
-                if (isCleaner) {
-                    if (runtime.compareTo(commandRuntime) >= 0 && runtime.difference(commandRuntime).getPositiveRuntime().compareTo(maxRuntimeDifference) <= 0) {
-                        cleanerOrUTList.add(new Command(command.getTarget(), startVillage.getLocation(), command.getArrival(), unit, senderName));
-                    }
-                } else {
-                    if (runtime.compareTo(commandRuntime) <= 0 && runtime.difference(commandRuntime).getPositiveRuntime().compareTo(maxRuntimeDifference) <= 0) {
-                        cleanerOrUTList.add(new Command(command.getTarget(), startVillage.getLocation(), command.getArrival(), unit, senderName));
-                    }
+        for (Village village : villages) {
+            boolean enoughUnits = true;
+            for (int i = 0; i < minimumUnits.length; i++) {
+                if (village.getUnits()[i] < minimumUnits[i]) {
+                    enoughUnits = false;
+                    break;
                 }
             }
-            j++;
-        }
-        return cleanerOrUTList;
-    }
-
-    private List<Command> findClosestCommands(boolean isCleaner, Command referenceCommand, ArrayList<Command> commandsToSearch) {
-        commandsToSearch.sort(new CommandComparator(referenceCommand));
-        if (isCleaner) {
-            if (commandsToSearch.size() - Settings.MAX_CLEANER_TO_SEND_TO_TARGET_VILLAGE < 0) {
-                return commandsToSearch;
-            } else {
-                return commandsToSearch.subList(commandsToSearch.size() - Settings.MAX_CLEANER_TO_SEND_TO_TARGET_VILLAGE, commandsToSearch.size());
+            if (enoughUnits) {
+                filteredVillages.add(village);
             }
-        } else {
-            return commandsToSearch.subList(0, commandsToSearch.size());
         }
-    }
-
-    public static Runtime calculateCommandRuntime(Command command) {
-        double distance = calculateDistance(command.getTarget(), command.getOrigin());
-        return calculateRuntime(distance, command.getUnit());
+        return filteredVillages;
     }
 
     public static Runtime calculateRuntime(double distance, Unit unit) {
         return Runtime.secondsToRuntime((int) Math.round(distance * (unit.getSpeed() / (Settings.WORLDSPEED * Settings.UNIT_MODIFICATOR))));
-    }
-
-    private static double calculateDistance(Point2D target, Point2D origin) {
-        return target.distance(origin.getX(), origin.getY());
-    }
-
-    public static Runtime getTimeToArrival(LocalDateTime arrival) {
-        LocalDateTime now = LocalDateTime.now();
-        int diff = (int) now.until(arrival, ChronoUnit.SECONDS);
-        return Runtime.secondsToRuntime(diff);
     }
 }

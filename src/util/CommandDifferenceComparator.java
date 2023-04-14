@@ -4,10 +4,11 @@ import entities.Command;
 
 import java.util.Comparator;
 
-public class CommandComparator implements Comparator<Command> {
+public class CommandDifferenceComparator implements Comparator<Command> {
+
     private final Command command;
 
-    public CommandComparator(Command command) {
+    public CommandDifferenceComparator(Command command) {
         this.command = command;
     }
 

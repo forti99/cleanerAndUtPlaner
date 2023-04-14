@@ -1,22 +1,21 @@
 package entities;
 
-import processing.Calculator;
 import processing.DataProcessor;
 import util.Settings;
 
-import java.awt.geom.Point2D;
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 public class Command implements Comparable<Command> {
-    private Point2D target;
-    private Point2D origin;
-    private LocalDateTime arrival;
-    private Unit unit;
-    private String senderName;
-    private Runtime runtime;
+    private final Point target;
+    private final Point origin;
+    private final LocalDateTime arrival;
+    private final Unit unit;
+    private final String senderName;
+    private final Runtime runtime;
 
-    public Command(Point2D target, Point2D origin, LocalDateTime arrival, Unit unit, String senderName) {
+    public Command(Point target, Point origin, LocalDateTime arrival, Unit unit, String senderName) {
         this.target = target;
         this.origin = origin;
         this.arrival = arrival;
@@ -43,27 +42,19 @@ public class Command implements Comparable<Command> {
     }
 
     private Runtime calculateRuntime() {
-        return Calculator.calculateCommandRuntime(this);
+        return Runtime.secondsToRuntime((int) Math.round(target.distance(origin) * (unit.getSpeed() / (Settings.WORLDSPEED * Settings.UNIT_MODIFICATOR))));
     }
 
-    public boolean isRunning() {
-        return runtime.compareTo(Calculator.getTimeToArrival(arrival)) > 0;
-    }
-
-    public Point2D getTarget() {
+    public Point getTarget() {
         return target;
     }
 
-    public Point2D getOrigin() {
+    public Point getOrigin() {
         return origin;
     }
 
     public LocalDateTime getArrival() {
         return arrival;
-    }
-
-    public Unit getUnit() {
-        return unit;
     }
 
     public String getSenderName() {

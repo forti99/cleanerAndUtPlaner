@@ -1,9 +1,9 @@
 package entities;
 
 public class Runtime implements Comparable<Runtime> {
-    private int hours;
-    private int minutes;
-    private int seconds;
+    private final int hours;
+    private final int minutes;
+    private final int seconds;
 
     public Runtime(int hours, int minutes, int seconds) {
         this.hours = hours;
@@ -19,27 +19,6 @@ public class Runtime implements Comparable<Runtime> {
         remainingSec -= minutes * 60;
         int seconds = remainingSec;
         return new Runtime(hours, minutes, seconds);
-    }
-
-    public void addSeconds(int seconds) {
-        addMinutes((this.seconds + seconds) / 60);
-        this.seconds = (this.seconds + seconds) % 60;
-    }
-
-    public void addMinutes(int minutes) {
-        addHours((this.minutes + minutes) / 60);
-        this.minutes = (this.minutes + minutes) % 60;
-    }
-
-    public void addHours(int hours) {
-        this.hours += hours;
-    }
-
-    /**
-     * @return returns a all positive runtime of this runtime (all negative values converted to positive)
-     */
-    public Runtime getPositiveRuntime() {
-        return new Runtime(Math.abs(this.hours), Math.abs(this.minutes), Math.abs(this.seconds));
     }
 
     public int toSeconds() {
@@ -88,5 +67,10 @@ public class Runtime implements Comparable<Runtime> {
                 }
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Runtime: " + hours + ":" + minutes + ":" + seconds;
     }
 }

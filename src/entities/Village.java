@@ -1,16 +1,16 @@
 package entities;
 
-import java.awt.geom.Point2D;
+import java.awt.*;
 
 public class Village {
     private final String ownerName;
-    private final Point2D location;
-    private int[] units;
+    private final Point location;
+    private final int[] units;
     private int cleanerOrUtToSendAmount;
 
-    public Village(String ownerName, double x, double y, int[] units, int cleanerOrUtToSendAmount) {
+    public Village(String ownerName, Point location, int[] units, int cleanerOrUtToSendAmount) {
         this.ownerName = ownerName;
-        this.location = new Point2D.Double(x, y);
+        this.location = location;
         this.units = units;
         this.cleanerOrUtToSendAmount = cleanerOrUtToSendAmount;
     }
@@ -20,7 +20,7 @@ public class Village {
         return ownerName;
     }
 
-    public Point2D getLocation() {
+    public Point getLocation() {
         return location;
     }
 
@@ -32,7 +32,7 @@ public class Village {
         return cleanerOrUtToSendAmount;
     }
 
-    public void setCleanerOrUtToSendAmount(int cleanerToSendAmount) {
-        this.cleanerOrUtToSendAmount = cleanerToSendAmount;
+    public void addCleanerOrUtToSendAmount(int amountToAdd) {
+        this.cleanerOrUtToSendAmount += amountToAdd;
     }
 }
