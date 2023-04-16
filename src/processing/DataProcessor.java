@@ -122,4 +122,9 @@ public class DataProcessor {
     public static int getIdFromCoords(Point coords) {
         return locationToId.get(coords);
     }
+
+
+    public static Set<String> getPotentialSenderNames() {
+        return potentialSenderNames;
+    }
 }

@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -35,29 +36,43 @@ public class MainWindow {
     private JTextField maxCleanerFromVillageField;
     private JRadioButton UTBerechnenRadioButton;
     private JRadioButton cleanerBerechnenRadioButton;
+    private JButton datenEinlesenButton;
+    private JLabel senderSelectionLabel;
+    private JTextArea senderNamesTextArea;
+    private Set<String> potentialSenderNames;
+    private Set<Command> commands;
+    private Set<Village> startVillages;
+    private int[] minimumUnits;
+    private int maxCleanerFromVillage;
+    boolean isCleaner;
+    Set<String> senderNames = new HashSet<>();
 
     public MainWindow() {
+        datenEinlesenButton.addActionListener(new EinlesenButtonPressed());
         cleanerUTCalculateButton.addActionListener(new CalculateButtonPressed());
     }
 
-    public class CalculateButtonPressed implements ActionListener {
-
+    public class EinlesenButtonPressed implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            Set<Command> commands;
+            isCleaner = cleanerBerechnenRadioButton.isSelected();
+            minimumUnits = readMinimumUnits();
+            maxCleanerFromVillage = getIntFromTextField(maxCleanerFromVillageField);
 
             try {
                 commands = DataProcessor.readUltimateCommandsFromTextArea(importNobleTextArea);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
+            startVillages = DataProcessor.readVillagesFromTextArea(importTroopsTextArea);
+            potentialSenderNames = DataProcessor.getPotentialSenderNames();
+        }
+    }
 
-            Set<Village> startVillages = DataProcessor.readVillagesFromTextArea(importTroopsTextArea);
-            Set<String> senderNames = DataProcessor.readLinesFromTextArea(inputPlayerNames);
-
-            int[] minimumUnits = readMinimumUnits();
-            int maxCleanerFromVillage = getIntFromTextField(maxCleanerFromVillageField);
-            boolean isCleaner = cleanerBerechnenRadioButton.isSelected();
+    public class CalculateButtonPressed implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            senderNames = new HashSet<>(DataProcessor.readOwnerNamesFromTextArea(senderNamesTextArea));
 
             if (maxCleanerFromVillage != 0) {
                 Settings.MAX_CLEANER_OR_UT_TO_SEND_FROM_VILLAGE = maxCleanerFromVillage;
@@ -88,7 +103,7 @@ public class MainWindow {
         if (allOwnersUltimateCommands.size() == 0) {
             allCommandsTextArea.append("Keine Cleaner berechnet!");
         } else {
-            ArrayList<String> ownerNames = DataProcessor.readOwnerNamesFromTextArea(inputPlayerNames);
+            ArrayList<String> ownerNames = new ArrayList<>(senderNames);
             int i = 0;
             for (Set<Command> ownerCommands : allOwnersUltimateCommands) {
                 if (ownerCommands.size() != 0) {
@@ -159,5 +174,6 @@ public class MainWindow {
         return intValue;
     }
 }
+
 
 
