@@ -16,27 +16,31 @@ public class Calculator {
 
     public static Set<Command> calculateCleanerOrUt(boolean isCleaner, Set<Command> commandsToClean, Set<Village> startVillages, Set<String> ownerNames, int[] minimumUnits) {
         Set<Village> startVillagesFiltered = filterVillagesForUnits(filterVillagesForOwners(startVillages, ownerNames), minimumUnits);
-        Map<Command, ArrayList<Command>> allPotentialCleaner = calculateAllPotentialCleanerOrUtSorted(isCleaner, commandsToClean, startVillagesFiltered, minimumUnits);
+        Map<Command, ArrayList<Command>> allPotentialCleanerSorted = calculateAllPotentialCleanerOrUtSorted(isCleaner, commandsToClean, startVillagesFiltered, minimumUnits);
         Set<Command> bestCleanerOrUtSet = new HashSet<>();
 
         Map<Point, Village> locationToFilteredVillage = new HashMap<>();
         for (Village village : startVillagesFiltered) {
             locationToFilteredVillage.put(village.getLocation(), village);
         }
+        int j = 0;
+        while (j < Settings.CLEANER_PER_VILLAGE) {
+            for (Command commandToClean : allPotentialCleanerSorted.keySet()) {
+                ArrayList<Command> potentialCleaner = allPotentialCleanerSorted.get(commandToClean);
 
-        for (Command commandToClean : allPotentialCleaner.keySet()) {
-            ArrayList<Command> potentialCleaner = allPotentialCleaner.get(commandToClean);
-            if (potentialCleaner.size() > 0) {
-                int i = 0;
-                Village bestCleanerOrigin = locationToFilteredVillage.get(potentialCleaner.get(i).getOrigin());
-                //takes the best cleaner whose origin village has not yet reached the maximum of allowed cleanerOrUtToSend
-                while (bestCleanerOrigin.getCleanerOrUtToSendAmount() >= Settings.MAX_CLEANER_OR_UT_TO_SEND_FROM_VILLAGE && i < potentialCleaner.size() - 1) {
-                    i++;
-                    bestCleanerOrigin = locationToFilteredVillage.get(potentialCleaner.get(i).getOrigin());
+                int i;
+                for (i = 0; i < potentialCleaner.size(); i++) {
+                    if (locationToFilteredVillage.get(potentialCleaner.get(i).getOrigin()).getCleanerOrUtToSendAmount() < Settings.MAX_CLEANER_OR_UT_TO_SEND_FROM_VILLAGE) {
+                        break;
+                    }
                 }
-                bestCleanerOrUtSet.add(potentialCleaner.get(i));
-                bestCleanerOrigin.addCleanerOrUtToSendAmount(1);
+                if (i < potentialCleaner.size()) {
+                    bestCleanerOrUtSet.add(potentialCleaner.get(i));
+                    locationToFilteredVillage.get(potentialCleaner.get(i).getOrigin()).addCleanerOrUtToSendAmount(1);
+                    allPotentialCleanerSorted.get(commandToClean).remove(i);
+                }
             }
+            j++;
         }
         return bestCleanerOrUtSet;
     }
@@ -60,12 +64,12 @@ public class Calculator {
                         //converts a number to a unit for distance-calculating
                         Unit unit = Unit.intToUnit(j);
                         if (isCleaner) {
-                            if (calculateRuntime(distance, unit).compareTo(commandRuntime) >= 0) {
+                            if (calculateRuntime(true, distance, unit).compareTo(commandRuntime) >= 0) {
                                 Command potentialCleanerCommand = new Command(commandToClean.getTarget(), startVillage.getLocation(), commandToClean.getArrival(), unit, startVillage.getOwnerName());
                                 potentialCleaners.add(potentialCleanerCommand);
                             }
                         } else {
-                            if (calculateRuntime(distance, unit).compareTo(commandRuntime) <= 0) {
+                            if (calculateRuntime(false, distance, unit).compareTo(commandRuntime) <= 0) {
                                 Command potentialCleanerCommand = new Command(commandToClean.getTarget(), startVillage.getLocation(), commandToClean.getArrival(), unit, startVillage.getOwnerName());
                                 potentialCleaners.add(potentialCleanerCommand);
                             }
@@ -111,7 +115,11 @@ public class Calculator {
         return filteredVillages;
     }
 
-    public static Runtime calculateRuntime(double distance, Unit unit) {
-        return Runtime.secondsToRuntime((int) Math.round(distance * (unit.getSpeed() / (Settings.WORLDSPEED * Settings.UNIT_MODIFICATOR))));
+    public static Runtime calculateRuntime(boolean isCleaner, double distance, Unit unit) {
+        if (!isCleaner) {
+            return Runtime.secondsToRuntime((int) Math.round(distance * (unit.getSpeed() / (Settings.WORLDSPEED * Settings.UNIT_MODIFICATOR)) * Settings.UT_BOOST_FACTOR));
+        } else {
+            return Runtime.secondsToRuntime((int) Math.round(distance * (unit.getSpeed() / (Settings.WORLDSPEED * Settings.UNIT_MODIFICATOR))));
+        }
     }
 }

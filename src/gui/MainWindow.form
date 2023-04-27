@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="gui.MainWindow">
-  <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="19" column-count="8" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="20" column-count="8" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="1418" height="641"/>
+      <xy x="20" y="20" width="1757" height="641"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -178,7 +178,7 @@
       </component>
       <component id="d1acb" class="javax.swing.JLabel">
         <constraints>
-          <grid row="9" column="1" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="10" column="1" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text value="Import geplante AGs (DSUltimatePlan -&gt; Export DSWorkbench)"/>
@@ -186,7 +186,7 @@
       </component>
       <component id="83f75" class="javax.swing.JLabel">
         <constraints>
-          <grid row="11" column="1" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="12" column="1" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text value="Import Stammesdörfer + Truppen (Truppen-Auslese-Script)"/>
@@ -194,7 +194,7 @@
       </component>
       <scrollpane id="e9c95">
         <constraints>
-          <grid row="10" column="1" row-span="1" col-span="6" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="11" column="1" row-span="1" col-span="6" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
         <border type="none"/>
@@ -203,13 +203,14 @@
             <constraints/>
             <properties>
               <rows value="10"/>
+              <text value=""/>
             </properties>
           </component>
         </children>
       </scrollpane>
       <scrollpane id="bfe93">
         <constraints>
-          <grid row="12" column="1" row-span="1" col-span="6" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="13" column="1" row-span="1" col-span="6" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
         <border type="none"/>
@@ -218,19 +219,20 @@
             <constraints/>
             <properties>
               <rows value="10"/>
+              <text value=""/>
             </properties>
           </component>
         </children>
       </scrollpane>
       <component id="b0834" class="javax.swing.JSeparator">
         <constraints>
-          <grid row="17" column="0" row-span="1" col-span="8" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="18" column="0" row-span="1" col-span="8" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
       </component>
       <component id="56c8" class="javax.swing.JButton" binding="cleanerUTCalculateButton">
         <constraints>
-          <grid row="18" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="19" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text value="Cleaner/Ut berechnen"/>
@@ -241,7 +243,7 @@
           <grid row="15" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Spieler die abschicken sollen (zeilenweise eintragen)"/>
+          <text value="Spieler die abschicken sollen:"/>
         </properties>
       </component>
       <component id="b344f" class="javax.swing.JSeparator">
@@ -252,7 +254,9 @@
       </component>
       <component id="a1a36" class="javax.swing.JLabel">
         <constraints>
-          <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
+          <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false">
+            <preferred-size width="204" height="32"/>
+          </grid>
         </constraints>
         <properties>
           <text value="Max. Cleaner/UT aus einem Dorf"/>
@@ -261,11 +265,11 @@
       <component id="2e92" class="javax.swing.JTextField" binding="maxCleanerFromVillageField">
         <constraints>
           <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
+            <preferred-size width="150" height="32"/>
           </grid>
         </constraints>
         <properties>
-          <text value="5"/>
+          <text value="1"/>
         </properties>
       </component>
       <component id="926c6" class="javax.swing.JRadioButton" binding="UTBerechnenRadioButton" default-binding="true">
@@ -300,28 +304,62 @@
         </constraints>
         <properties/>
       </component>
-      <component id="3d84" class="javax.swing.JButton" binding="datenEinlesenButton" default-binding="true">
-        <constraints>
-          <grid row="13" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Daten einlesen"/>
-        </properties>
-      </component>
       <component id="e82d2" class="javax.swing.JSeparator">
         <constraints>
           <grid row="14" column="0" row-span="1" col-span="8" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
       </component>
-      <component id="1f37d" class="javax.swing.JTextArea" binding="senderNamesTextArea">
+      <component id="63ee4" class="javax.swing.JTextField" binding="cleanerPerTargetField">
         <constraints>
-          <grid row="16" column="1" row-span="1" col-span="6" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="50"/>
+          <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
           </grid>
         </constraints>
         <properties>
-          <rows value="10"/>
+          <text value="1"/>
+        </properties>
+      </component>
+      <component id="5ac63" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Cleaner/UT pro Zieldorf"/>
+        </properties>
+      </component>
+      <component id="c4072" class="javax.swing.JTextArea" binding="senderNamesTextArea">
+        <constraints>
+          <grid row="16" column="1" row-span="1" col-span="6" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="3d84" class="javax.swing.JButton" binding="spielerAuswaehlenButton">
+        <constraints>
+          <grid row="17" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Spielerauswahl öffnen"/>
+        </properties>
+      </component>
+      <component id="48e16" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="UT-Boost (in %):"/>
+        </properties>
+      </component>
+      <component id="7879" class="javax.swing.JTextField" binding="utBoostField">
+        <constraints>
+          <grid row="8" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="0"/>
         </properties>
       </component>
     </children>

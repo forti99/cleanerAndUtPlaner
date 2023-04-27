@@ -32,50 +32,57 @@ public class MainWindow {
     private JTextArea importNobleTextArea;
     private JTextArea importTroopsTextArea;
     private JButton cleanerUTCalculateButton;
-    private JTextArea inputPlayerNames;
     private JTextField maxCleanerFromVillageField;
     private JRadioButton UTBerechnenRadioButton;
     private JRadioButton cleanerBerechnenRadioButton;
-    private JButton datenEinlesenButton;
+    private JButton spielerAuswaehlenButton;
     private JLabel senderSelectionLabel;
+    private JTextField cleanerPerTargetField;
     private JTextArea senderNamesTextArea;
+    private JTextField utBoostField;
     private Set<String> potentialSenderNames;
-    private Set<Command> commands;
     private Set<Village> startVillages;
-    private int[] minimumUnits;
-    private int maxCleanerFromVillage;
-    boolean isCleaner;
     Set<String> senderNames = new HashSet<>();
 
     public MainWindow() {
-        datenEinlesenButton.addActionListener(new EinlesenButtonPressed());
+        spielerAuswaehlenButton.addActionListener(new EinlesenButtonPressed());
         cleanerUTCalculateButton.addActionListener(new CalculateButtonPressed());
     }
 
     public class EinlesenButtonPressed implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            isCleaner = cleanerBerechnenRadioButton.isSelected();
-            minimumUnits = readMinimumUnits();
-            maxCleanerFromVillage = getIntFromTextField(maxCleanerFromVillageField);
-
-            try {
-                commands = DataProcessor.readUltimateCommandsFromTextArea(importNobleTextArea);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
             startVillages = DataProcessor.readVillagesFromTextArea(importTroopsTextArea);
             potentialSenderNames = DataProcessor.getPotentialSenderNames();
+            addCheckboxesForPotentialSenders();
         }
     }
 
     public class CalculateButtonPressed implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
+            boolean isCleaner = cleanerBerechnenRadioButton.isSelected();
+
+            int[] minimumUnits = readMinimumUnits();
+            int maxCleanerFromVillage = getIntFromTextField(maxCleanerFromVillageField);
+            int cleanerPerVillage = getIntFromTextField(cleanerPerTargetField);
+            double utBoostPercentage = getIntFromTextField(utBoostField);
+            Settings.UT_BOOST_FACTOR = 1 - utBoostPercentage;
+
+            Set<Command> commands;
+            try {
+                commands = DataProcessor.readUltimateCommandsFromTextArea(importNobleTextArea);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            startVillages = DataProcessor.readVillagesFromTextArea(importTroopsTextArea);
             senderNames = new HashSet<>(DataProcessor.readOwnerNamesFromTextArea(senderNamesTextArea));
 
-            if (maxCleanerFromVillage != 0) {
+            if (maxCleanerFromVillage > 0) {
                 Settings.MAX_CLEANER_OR_UT_TO_SEND_FROM_VILLAGE = maxCleanerFromVillage;
+            }
+            if (cleanerPerVillage > 0) {
+                Settings.CLEANER_PER_VILLAGE = cleanerPerVillage;
             }
 
             Set<Command> allSenderCommands = Calculator.calculateCleanerOrUt(isCleaner, commands, startVillages, senderNames, minimumUnits);
@@ -139,8 +146,6 @@ public class MainWindow {
         panel.add(textArea, BorderLayout.CENTER);
         panel.add(copyButton, BorderLayout.SOUTH);
         JScrollPane scrollPane = new JScrollPane(panel);
-        scrollPane.setPreferredSize(new Dimension(1100, 800));
-        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         tabbedPane.addTab(tabName, scrollPane);
         return textArea;
     }
@@ -172,6 +177,51 @@ public class MainWindow {
             intValue = Integer.parseInt(textField.getText());
         }
         return intValue;
+    }
+
+    private void addCheckboxesForPotentialSenders() {
+        JFrame senderSelectionFrame = new JFrame("Absender");
+        senderSelectionFrame.setLayout(new BorderLayout());
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        senderSelectionFrame.add(scrollPane, BorderLayout.CENTER);
+
+        JLabel senderSelectionLabel = new JLabel("Absender auswählen");
+        panel.add(senderSelectionLabel);
+
+        for (String sender : potentialSenderNames) {
+            JCheckBox checkBox = new JCheckBox(sender);
+            panel.add(checkBox);
+        }
+
+        JButton okButton = new JButton("OK");
+        okButton.addActionListener(e -> {
+            StringBuilder selectedSenders = new StringBuilder();
+            Component[] components = panel.getComponents();
+            for (Component component : components) {
+                if (component instanceof JCheckBox checkBox) {
+                    if (checkBox.isSelected()) {
+                        selectedSenders.append(checkBox.getText()).append("\n");
+                    }
+                }
+            }
+            senderNamesTextArea.setText(selectedSenders.toString());
+            senderSelectionFrame.dispose();
+        });
+
+        panel.add(okButton);
+
+        // Erhalten der Position des aktuellen Frames
+        Point location = mainPanel.getLocation();
+
+        // Berechnung der Position des neuen Frames relativ zum aktuellen Frame
+        int x = location.x + (mainPanel.getWidth() - senderSelectionFrame.getWidth()) / 2;
+        int y = location.y + (mainPanel.getHeight() - senderSelectionFrame.getHeight()) / 2;
+
+        // Setzen der Position des neuen Frames
+        senderSelectionFrame.setLocation(x, y);
+        senderSelectionFrame.pack();
+        senderSelectionFrame.setVisible(true);
     }
 }
 
